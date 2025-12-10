@@ -4,12 +4,13 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { LayoutGrid, List, Globe, Network, Sparkles } from 'lucide-react';
+import { LayoutGrid, List, Globe2, Network, Sparkles, BarChart3 } from 'lucide-react';
 import { HeroSection } from '@/components/dashboard/hero-section';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { SearchFilter } from '@/components/dashboard/search-filter';
 import { NodeTable } from '@/components/dashboard/node-table';
 import { NodeCardList } from '@/components/dashboard/node-card';
+import { AnalyticsCharts } from '@/components/charts/analytics-charts';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePNodes } from '@/hooks/use-pnodes';
@@ -17,15 +18,18 @@ import { staggerContainer, fadeInUp } from '@/lib/animations';
 import type { PNode } from '@/lib/types';
 
 // Dynamic imports for heavy components
-const WorldMap = dynamic(
-  () => import('@/components/dashboard/world-map').then((mod) => mod.WorldMap),
+const Globe3D = dynamic(
+  () => import('@/components/dashboard/globe-3d').then((mod) => mod.Globe3D),
   { 
     ssr: false, 
     loading: () => (
-      <div className="h-[500px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <span className="text-sm text-muted-foreground">Loading map...</span>
+      <div className="h-[600px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground">Loading 3D Globe...</span>
         </div>
       </div>
     )
@@ -63,7 +67,7 @@ export default function HomePage() {
 
   // View mode: 'table' for desktop, 'cards' for mobile/user preference
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [activeTab, setActiveTab] = useState<'list' | 'map' | 'topology'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'globe' | 'topology' | 'analytics'>('list');
 
   // Extract unique versions for filter
   const versions = useMemo(() => {
@@ -99,7 +103,7 @@ export default function HomePage() {
           className="space-y-6"
         >
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <TabsList className="bg-card/50 backdrop-blur border border-border/50 p-1">
+            <TabsList className="bg-card/50 backdrop-blur border border-border/50 p-1 h-auto flex-wrap">
               <TabsTrigger 
                 value="list" 
                 className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
@@ -108,11 +112,11 @@ export default function HomePage() {
                 <span className="hidden sm:inline">Node List</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="map" 
+                value="globe" 
                 className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
               >
-                <Globe className="h-4 w-4" />
-                <span className="hidden sm:inline">World Map</span>
+                <Globe2 className="h-4 w-4" />
+                <span className="hidden sm:inline">3D Globe</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="topology" 
@@ -120,6 +124,13 @@ export default function HomePage() {
               >
                 <Network className="h-4 w-4" />
                 <span className="hidden sm:inline">Topology</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
             </TabsList>
 
@@ -186,9 +197,9 @@ export default function HomePage() {
             </div>
           </TabsContent>
 
-          {/* Tab Content: World Map */}
-          <TabsContent value="map" className="mt-0">
-            <WorldMap
+          {/* Tab Content: 3D Globe */}
+          <TabsContent value="globe" className="mt-0">
+            <Globe3D
               nodes={nodes}
               isLoading={isLoading}
               onNodeClick={handleNodeClick}
@@ -201,6 +212,15 @@ export default function HomePage() {
               nodes={nodes}
               isLoading={isLoading}
               onNodeClick={handleNodeClick}
+            />
+          </TabsContent>
+
+          {/* Tab Content: Analytics */}
+          <TabsContent value="analytics" className="mt-0">
+            <AnalyticsCharts
+              nodes={nodes}
+              stats={stats}
+              isLoading={isLoading}
             />
           </TabsContent>
         </Tabs>

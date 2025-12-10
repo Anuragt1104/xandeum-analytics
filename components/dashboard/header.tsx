@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Github, Twitter, MessageCircle, Menu, X, Wrench, Zap } from 'lucide-react';
+import { Github, Twitter, MessageCircle, Menu, X, Wrench, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/auth/user-menu';
+import { XandeumLogo } from '@/components/ui/xandeum-logo';
 
 const navLinks = [
   { href: '/', label: 'Dashboard' },
@@ -52,26 +53,8 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <motion.div 
-              className="relative p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-300"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Database className="h-5 w-5 text-primary" />
-              {/* Glow effect */}
-              <motion.div
-                className="absolute inset-0 rounded-xl bg-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-none tracking-tight">Xandeum</span>
-              <span className="text-[10px] text-muted-foreground leading-none mt-0.5 font-medium">
-                pNode Analytics
-              </span>
-            </div>
+          <Link href="/" className="flex items-center">
+            <XandeumLogo size="md" animated={true} />
           </Link>
 
           {/* Desktop Navigation */}
@@ -83,12 +66,15 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   target={link.external ? '_blank' : undefined}
-                  className="relative px-4 py-2 text-sm font-medium transition-colors"
+                  className="relative px-4 py-2 text-sm font-medium transition-colors group"
                 >
-                  <span className={`relative z-10 ${
+                  <span className={`relative z-10 flex items-center gap-1 ${
                     isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                   }`}>
                     {link.label}
+                    {link.external && (
+                      <ExternalLink className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    )}
                   </span>
                   {isActive && (
                     <motion.div
@@ -99,7 +85,12 @@ export function Header() {
                   )}
                   {/* Hover underline */}
                   {!isActive && (
-                    <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 hover:scale-x-100 transition-transform origin-left" />
+                    <motion.span 
+                      className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary origin-left"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.2 }}
+                    />
                   )}
                 </Link>
               );
@@ -129,7 +120,7 @@ export function Header() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                  <Button variant="ghost" size="icon" asChild className="h-8 w-8 hover:bg-primary/10 hover:text-primary transition-colors">
                     <Link href={link.href} target="_blank" aria-label={link.label}>
                       <link.icon className="h-4 w-4" />
                     </Link>
@@ -201,13 +192,14 @@ export function Header() {
                     <Link
                       href={link.href}
                       target={link.external ? '_blank' : undefined}
-                      className={`block px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                         !link.external && pathname === link.href
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
                       {link.label}
+                      {link.external && <ExternalLink className="h-3 w-3 opacity-50" />}
                     </Link>
                   </motion.div>
                 ))}
@@ -219,9 +211,9 @@ export function Header() {
                 >
                   <Link
                     href="/tools"
-                    className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
                   >
-                    <Wrench className="h-4 w-4 inline mr-2" />
+                    <Wrench className="h-4 w-4" />
                     Tools
                   </Link>
                 </motion.div>
@@ -233,7 +225,7 @@ export function Header() {
                   className="flex gap-2 px-4 pt-2"
                 >
                   {socialLinks.map((link) => (
-                    <Button key={link.href} variant="outline" size="sm" asChild>
+                    <Button key={link.href} variant="outline" size="sm" asChild className="flex-1">
                       <Link href={link.href} target="_blank">
                         <link.icon className="h-4 w-4 mr-2" />
                         {link.label}

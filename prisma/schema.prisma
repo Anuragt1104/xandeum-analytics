@@ -1,0 +1,280 @@
+// Xandeum pNode Analytics Platform - Database Schema
+// Using Prisma with PostgreSQL (Supabase compatible)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// pNode Tables
+// ============================================
+
+model PNode {
+  id                String   @id @default(cuid())
+  identityPubkey    String   @unique @map("identity_pubkey")
+  displayName       String?  @map("display_name")
+  currentIp         String   @map("current_ip")
+  port              Int      @default(6000)
+  softwareVersion   String   @map("software_version")
+  
+  // Geographic data
+  geoCountry        String?  @map("geo_country")
+  geoCountryCode    String?  @map("geo_country_code")
+  geoCity           String?  @map("geo_city")
+  geoLatitude       Float?   @map("geo_latitude")
+  geoLongitude      Float?   @map("geo_longitude")
+  geoIsp            String?  @map("geo_isp")
+  
+  // Status
+  status            NodeStatus @default(OFFLINE)
+  firstSeen         DateTime @default(now()) @map("first_seen")
+  lastSeen          DateTime @default(now()) @map("last_seen")
+  isLatestVersion   Boolean  @default(false) @map("is_latest_version")
+  
+  // Flags
+  isIncentivized    Boolean  @default(false) @map("is_incentivized")
+  hasNftMultiplier  Boolean  @default(false) @map("has_nft_multiplier")
+  
+  // Relations
+  metrics           NodeMetric[]
+  claimedBy         ClaimedNode?
+  peers             NodePeer[]     @relation("NodePeers")
+  peerOf            NodePeer[]     @relation("PeerOfNodes")
+  alerts            NodeAlert[]
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("p_nodes")
+}
+
+enum NodeStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+}
+
+// Time-series metrics for each node
+model NodeMetric {
+  id                String   @id @default(cuid())
+  nodeId            String   @map("node_id")
+  node              PNode    @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  timestamp         DateTime @default(now())
+  
+  // Performance metrics
+  uptimeSeconds     BigInt   @map("uptime_seconds")
+  uptimePercent     Float    @map("uptime_percent")
+  rpcLatencyMs      Int      @map("rpc_latency_ms")
+  peerCount         Int      @map("peer_count")
+  
+  // Storage metrics
+  storageUsedBytes  BigInt   @map("storage_used_bytes")
+  storageCapacityBytes BigInt @map("storage_capacity_bytes")
+  storagePercent    Float    @map("storage_percent")
+  
+  // SRI components
+  sri               Int      @default(0)
+  rpcAvailability   Int      @map("rpc_availability")
+  gossipVisibility  Int      @map("gossip_visibility")
+  versionCompliance Int      @map("version_compliance")
+  
+  // Status code (200 = OK, 408 = Timeout, 503 = Refused)
+  statusCode        Int      @default(200) @map("status_code")
+  
+  // Sentinel that recorded this metric
+  sentinelId        String?  @map("sentinel_id")
+
+  @@index([nodeId, timestamp])
+  @@map("node_metrics")
+}
+
+// Peer relationships for topology graph
+model NodePeer {
+  id         String   @id @default(cuid())
+  nodeId     String   @map("node_id")
+  node       PNode    @relation("NodePeers", fields: [nodeId], references: [id], onDelete: Cascade)
+  peerId     String   @map("peer_id")
+  peer       PNode    @relation("PeerOfNodes", fields: [peerId], references: [id], onDelete: Cascade)
+  
+  discoveredAt DateTime @default(now()) @map("discovered_at")
+  lastSeen     DateTime @default(now()) @map("last_seen")
+  
+  @@unique([nodeId, peerId])
+  @@map("node_peers")
+}
+
+// ============================================
+// User & Authentication Tables
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  emailVerified   DateTime? @map("email_verified")
+  name            String?
+  image           String?
+  hashedPassword  String?   @map("hashed_password")
+  
+  // Wallet connection
+  walletAddress   String?   @unique @map("wallet_address")
+  
+  // Role
+  role            UserRole  @default(USER)
+  
+  // Relations
+  accounts        Account[]
+  sessions        Session[]
+  claimedNodes    ClaimedNode[]
+  alerts          NodeAlert[]
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  OPERATOR
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// Node Ownership & Claims
+// ============================================
+
+model ClaimedNode {
+  id              String   @id @default(cuid())
+  nodeId          String   @unique @map("node_id")
+  node            PNode    @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Verification
+  signatureHash   String   @map("signature_hash")
+  verifiedAt      DateTime @default(now()) @map("verified_at")
+  
+  // Operator customizations
+  customName      String?  @map("custom_name")
+  customLogo      String?  @map("custom_logo")
+  websiteUrl      String?  @map("website_url")
+  discordHandle   String?  @map("discord_handle")
+  
+  // Notifications
+  emailAlerts     Boolean  @default(false) @map("email_alerts")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("claimed_nodes")
+}
+
+// ============================================
+// Alerts & Notifications
+// ============================================
+
+model NodeAlert {
+  id          String      @id @default(cuid())
+  nodeId      String      @map("node_id")
+  node        PNode       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  userId      String?     @map("user_id")
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  type        AlertType
+  severity    AlertSeverity @default(INFO)
+  message     String
+  
+  // Status
+  isRead      Boolean     @default(false) @map("is_read")
+  isResolved  Boolean     @default(false) @map("is_resolved")
+  resolvedAt  DateTime?   @map("resolved_at")
+  
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([nodeId, createdAt])
+  @@map("node_alerts")
+}
+
+enum AlertType {
+  NODE_OFFLINE
+  NODE_DEGRADED
+  VERSION_OUTDATED
+  HIGH_LATENCY
+  LOW_STORAGE
+  PEER_COUNT_LOW
+  SRI_DROP
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+// ============================================
+// Network Statistics (Aggregated)
+// ============================================
+
+model NetworkSnapshot {
+  id                    String   @id @default(cuid())
+  timestamp             DateTime @default(now())
+  
+  totalNodes            Int      @map("total_nodes")
+  activeNodes           Int      @map("active_nodes")
+  totalStorageCapacity  BigInt   @map("total_storage_capacity")
+  totalStorageUsed      BigInt   @map("total_storage_used")
+  averageSri            Int      @map("average_sri")
+  averageUptime         Float    @map("average_uptime")
+  averageLatency        Int      @map("average_latency")
+  nodesOnLatestVersion  Int      @map("nodes_on_latest_version")
+  latestVersion         String   @map("latest_version")
+
+  @@index([timestamp])
+  @@map("network_snapshots")
+}

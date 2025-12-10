@@ -4,13 +4,12 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { LayoutGrid, List, Globe2, Network, Sparkles, BarChart3 } from 'lucide-react';
+import { LayoutGrid, List, Globe2, Network, Sparkles } from 'lucide-react';
 import { HeroSection } from '@/components/dashboard/hero-section';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { SearchFilter } from '@/components/dashboard/search-filter';
 import { NodeTable } from '@/components/dashboard/node-table';
 import { NodeCardList } from '@/components/dashboard/node-card';
-import { AnalyticsCharts } from '@/components/charts/analytics-charts';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePNodes } from '@/hooks/use-pnodes';
@@ -18,18 +17,18 @@ import { staggerContainer, fadeInUp } from '@/lib/animations';
 import type { PNode } from '@/lib/types';
 
 // Dynamic imports for heavy components
-const Globe3D = dynamic(
-  () => import('@/components/dashboard/globe-3d').then((mod) => mod.Globe3D),
+const WorldMap = dynamic(
+  () => import('@/components/dashboard/world-map').then((mod) => mod.WorldMap),
   { 
     ssr: false, 
     loading: () => (
-      <div className="h-[600px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
+      <div className="h-[500px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+            <div className="w-16 h-16 rounded-full border-4 border-xandeum-teal/20 border-t-xandeum-teal animate-spin" />
+            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-xandeum-teal" />
           </div>
-          <span className="text-sm text-muted-foreground">Loading 3D Globe...</span>
+          <span className="text-sm text-muted-foreground">Loading World Map...</span>
         </div>
       </div>
     )
@@ -43,7 +42,7 @@ const TopologyGraph = dynamic(
     loading: () => (
       <div className="h-[500px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-xandeum-purple/30 border-t-xandeum-purple rounded-full animate-spin" />
           <span className="text-sm text-muted-foreground">Loading topology...</span>
         </div>
       </div>
@@ -67,7 +66,7 @@ export default function HomePage() {
 
   // View mode: 'table' for desktop, 'cards' for mobile/user preference
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [activeTab, setActiveTab] = useState<'list' | 'globe' | 'topology' | 'analytics'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'map' | 'topology'>('list');
 
   // Extract unique versions for filter
   const versions = useMemo(() => {
@@ -95,7 +94,7 @@ export default function HomePage() {
         <StatsCards stats={stats} isLoading={isLoading} />
       </motion.div>
 
-      {/* Main Content Tabs */}
+      {/* Main Content Tabs - Only 3 tabs: List, Map, Topology */}
       <motion.div variants={fadeInUp}>
         <Tabs 
           value={activeTab} 
@@ -106,31 +105,24 @@ export default function HomePage() {
             <TabsList className="bg-card/50 backdrop-blur border border-border/50 p-1 h-auto flex-wrap">
               <TabsTrigger 
                 value="list" 
-                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-teal data-[state=active]:to-xandeum-teal/80 data-[state=active]:text-white transition-all"
               >
                 <List className="h-4 w-4" />
                 <span className="hidden sm:inline">Node List</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="globe" 
-                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                value="map" 
+                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-orange data-[state=active]:to-xandeum-orange/80 data-[state=active]:text-white transition-all"
               >
                 <Globe2 className="h-4 w-4" />
-                <span className="hidden sm:inline">3D Globe</span>
+                <span className="hidden sm:inline">World Map</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="topology" 
-                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-purple data-[state=active]:to-xandeum-purple/80 data-[state=active]:text-white transition-all"
               >
                 <Network className="h-4 w-4" />
                 <span className="hidden sm:inline">Topology</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
             </TabsList>
 
@@ -197,9 +189,9 @@ export default function HomePage() {
             </div>
           </TabsContent>
 
-          {/* Tab Content: 3D Globe */}
-          <TabsContent value="globe" className="mt-0">
-            <Globe3D
+          {/* Tab Content: World Map (2D with clustering) */}
+          <TabsContent value="map" className="mt-0">
+            <WorldMap
               nodes={nodes}
               isLoading={isLoading}
               onNodeClick={handleNodeClick}
@@ -214,15 +206,6 @@ export default function HomePage() {
               onNodeClick={handleNodeClick}
             />
           </TabsContent>
-
-          {/* Tab Content: Analytics */}
-          <TabsContent value="analytics" className="mt-0">
-            <AnalyticsCharts
-              nodes={nodes}
-              stats={stats}
-              isLoading={isLoading}
-            />
-          </TabsContent>
         </Tabs>
       </motion.div>
 
@@ -232,44 +215,50 @@ export default function HomePage() {
         className="rounded-xl border border-border/50 bg-card/30 backdrop-blur p-6 md:p-8"
       >
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <Sparkles className="h-5 w-5 text-xandeum-orange" />
           <h2 className="text-lg font-semibold">About Xandeum pNodes</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6 text-sm text-muted-foreground">
           <motion.div 
-            className="space-y-2"
-            whileHover={{ y: -2 }}
+            className="space-y-2 p-4 rounded-lg bg-xandeum-orange/5 border border-xandeum-orange/10"
+            whileHover={{ y: -2, borderColor: 'rgba(245, 166, 35, 0.3)' }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="font-medium text-foreground">What are pNodes?</h3>
+            <h3 className="font-medium text-foreground flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-xandeum-orange" />
+              Smart Contract Native
+            </h3>
             <p>
-              Provider Nodes (pNodes) form Xandeum&apos;s decentralized storage network,
-              acting as the &quot;hard drive&quot; for Solana dApps. They store data securely
-              with redundancy and erasure coding.
+              Xandeum integrates directly with Solana&apos;s smart contract platform,
+              enabling seamless and efficient data interaction for dApps.
             </p>
           </motion.div>
           <motion.div 
-            className="space-y-2"
-            whileHover={{ y: -2 }}
+            className="space-y-2 p-4 rounded-lg bg-xandeum-teal/5 border border-xandeum-teal/10"
+            whileHover={{ y: -2, borderColor: 'rgba(0, 201, 167, 0.3)' }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="font-medium text-foreground">Storage Reliability Index</h3>
+            <h3 className="font-medium text-foreground flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-xandeum-teal" />
+              Scalable to Exabytes+
+            </h3>
             <p>
-              SRI is a weighted score based on RPC availability (40%), gossip
-              visibility (30%), and version compliance (30%). Higher SRI indicates
-              more reliable storage providers.
+              The solution for massive storage capacity needed for data-intensive
+              applications to become a reality on Solana.
             </p>
           </motion.div>
           <motion.div 
-            className="space-y-2"
-            whileHover={{ y: -2 }}
+            className="space-y-2 p-4 rounded-lg bg-xandeum-purple/5 border border-xandeum-purple/10"
+            whileHover={{ y: -2, borderColor: 'rgba(155, 89, 182, 0.3)' }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="font-medium text-foreground">Deep South Era</h3>
+            <h3 className="font-medium text-foreground flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-xandeum-purple" />
+              Random Access
+            </h3>
             <p>
-              The current DevNet phase with 300 incentivized pNodes. Operators earn
-              rewards for maintaining high uptime and participating in network
-              testing.
+              Quick and efficient retrieval of specific data, unlike solutions
+              that only offer file-level access.
             </p>
           </motion.div>
         </div>

@@ -1,10 +1,18 @@
 // User Registration API Route
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, isDatabaseAvailable } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if database is available
+    if (!isDatabaseAvailable() || !prisma) {
+      return NextResponse.json(
+        { error: 'Registration is currently unavailable. Database not configured.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { email, password, name } = body;
 
@@ -67,4 +75,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

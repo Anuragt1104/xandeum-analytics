@@ -1,215 +1,54 @@
-// Prisma Database Client
-// Singleton pattern for Next.js hot reloading
+// Prisma Database Client (Optional)
+// This is a stub that works whether Prisma is configured or not.
+// The app uses mock data by default and database features are optional.
 
-import { PrismaClient } from '@prisma/client';
+// Check if Prisma is available (generated)
+let PrismaClientModule: any = null;
+try {
+  // Dynamic import to avoid build errors when Prisma isn't generated
+  PrismaClientModule = require('@prisma/client');
+} catch {
+  // Prisma not generated - this is fine, we'll use mock data
+  console.warn('Prisma client not found. Database features disabled. Using mock data.');
+}
+
+// Type for PrismaClient (or null if not available)
+type PrismaClientType = any;
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: PrismaClientType | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
+export const prisma: PrismaClientType | null = PrismaClientModule
+  ? (globalForPrisma.prisma ??
+      new PrismaClientModule.PrismaClient({
+        log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      }))
+  : null;
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production' && prisma) {
+  globalForPrisma.prisma = prisma;
+}
 
 export default prisma;
 
-// Helper types for common queries
-export type NodeWithMetrics = Awaited<ReturnType<typeof getNodeWithLatestMetrics>>;
-
-// Helper functions for common database operations
-export async function getNodeWithLatestMetrics(identityPubkey: string) {
-  return prisma.pNode.findUnique({
-    where: { identityPubkey },
-    include: {
-      metrics: {
-        orderBy: { timestamp: 'desc' },
-        take: 1,
-      },
-      claimedBy: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-            },
-          },
-        },
-      },
-    },
-  });
+// Check if database is available
+export function isDatabaseAvailable(): boolean {
+  return prisma !== null;
 }
 
-export async function getAllNodesWithLatestMetrics() {
-  return prisma.pNode.findMany({
-    include: {
-      metrics: {
-        orderBy: { timestamp: 'desc' },
-        take: 1,
-      },
-    },
-    orderBy: {
-      lastSeen: 'desc',
-    },
-  });
+// Helper: Safe database operation wrapper
+export async function withDatabase<T>(
+  operation: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  if (!prisma) {
+    return fallback;
+  }
+  try {
+    return await operation();
+  } catch (error) {
+    console.error('Database operation failed:', error);
+    return fallback;
+  }
 }
-
-export async function upsertNode(data: {
-  identityPubkey: string;
-  currentIp: string;
-  port?: number;
-  softwareVersion: string;
-  geoCountry?: string;
-  geoCountryCode?: string;
-  geoCity?: string;
-  geoLatitude?: number;
-  geoLongitude?: number;
-  geoIsp?: string;
-  status: 'ONLINE' | 'OFFLINE' | 'DEGRADED';
-  isLatestVersion?: boolean;
-  isIncentivized?: boolean;
-  hasNftMultiplier?: boolean;
-}) {
-  return prisma.pNode.upsert({
-    where: { identityPubkey: data.identityPubkey },
-    update: {
-      currentIp: data.currentIp,
-      port: data.port ?? 6000,
-      softwareVersion: data.softwareVersion,
-      geoCountry: data.geoCountry,
-      geoCountryCode: data.geoCountryCode,
-      geoCity: data.geoCity,
-      geoLatitude: data.geoLatitude,
-      geoLongitude: data.geoLongitude,
-      geoIsp: data.geoIsp,
-      status: data.status,
-      isLatestVersion: data.isLatestVersion ?? false,
-      lastSeen: new Date(),
-    },
-    create: {
-      identityPubkey: data.identityPubkey,
-      currentIp: data.currentIp,
-      port: data.port ?? 6000,
-      softwareVersion: data.softwareVersion,
-      geoCountry: data.geoCountry,
-      geoCountryCode: data.geoCountryCode,
-      geoCity: data.geoCity,
-      geoLatitude: data.geoLatitude,
-      geoLongitude: data.geoLongitude,
-      geoIsp: data.geoIsp,
-      status: data.status,
-      isLatestVersion: data.isLatestVersion ?? false,
-      isIncentivized: data.isIncentivized ?? false,
-      hasNftMultiplier: data.hasNftMultiplier ?? false,
-    },
-  });
-}
-
-export async function recordNodeMetric(data: {
-  nodeId: string;
-  uptimeSeconds: bigint;
-  uptimePercent: number;
-  rpcLatencyMs: number;
-  peerCount: number;
-  storageUsedBytes: bigint;
-  storageCapacityBytes: bigint;
-  storagePercent: number;
-  sri: number;
-  rpcAvailability: number;
-  gossipVisibility: number;
-  versionCompliance: number;
-  statusCode?: number;
-  sentinelId?: string;
-}) {
-  return prisma.nodeMetric.create({
-    data: {
-      nodeId: data.nodeId,
-      uptimeSeconds: data.uptimeSeconds,
-      uptimePercent: data.uptimePercent,
-      rpcLatencyMs: data.rpcLatencyMs,
-      peerCount: data.peerCount,
-      storageUsedBytes: data.storageUsedBytes,
-      storageCapacityBytes: data.storageCapacityBytes,
-      storagePercent: data.storagePercent,
-      sri: data.sri,
-      rpcAvailability: data.rpcAvailability,
-      gossipVisibility: data.gossipVisibility,
-      versionCompliance: data.versionCompliance,
-      statusCode: data.statusCode ?? 200,
-      sentinelId: data.sentinelId,
-    },
-  });
-}
-
-export async function getNodeMetricsHistory(nodeId: string, hours: number = 24) {
-  const since = new Date(Date.now() - hours * 60 * 60 * 1000);
-  return prisma.nodeMetric.findMany({
-    where: {
-      nodeId,
-      timestamp: { gte: since },
-    },
-    orderBy: { timestamp: 'asc' },
-  });
-}
-
-export async function recordNetworkSnapshot(data: {
-  totalNodes: number;
-  activeNodes: number;
-  totalStorageCapacity: bigint;
-  totalStorageUsed: bigint;
-  averageSri: number;
-  averageUptime: number;
-  averageLatency: number;
-  nodesOnLatestVersion: number;
-  latestVersion: string;
-}) {
-  return prisma.networkSnapshot.create({ data });
-}
-
-export async function getNetworkHistory(hours: number = 24) {
-  const since = new Date(Date.now() - hours * 60 * 60 * 1000);
-  return prisma.networkSnapshot.findMany({
-    where: { timestamp: { gte: since } },
-    orderBy: { timestamp: 'asc' },
-  });
-}
-
-export async function getNodePeers(nodeId: string) {
-  return prisma.nodePeer.findMany({
-    where: { nodeId },
-    include: {
-      peer: {
-        select: {
-          identityPubkey: true,
-          displayName: true,
-          currentIp: true,
-          status: true,
-          geoCountry: true,
-          geoCity: true,
-        },
-      },
-    },
-  });
-}
-
-export async function updateNodePeers(nodeId: string, peerIds: string[]) {
-  // Remove old peer relationships
-  await prisma.nodePeer.deleteMany({
-    where: { nodeId },
-  });
-  
-  // Add new peer relationships
-  const peerData = peerIds.map((peerId) => ({
-    nodeId,
-    peerId,
-  }));
-  
-  return prisma.nodePeer.createMany({
-    data: peerData,
-    skipDuplicates: true,
-  });
-}
-

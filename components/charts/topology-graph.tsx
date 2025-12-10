@@ -249,7 +249,8 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
         d.fy = null;
       });
 
-    node.call(drag);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    node.call(drag as any);
 
     // Create labels
     const labels = g.append('g')

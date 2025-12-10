@@ -2,11 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Database, Github, Twitter, MessageCircle, Menu, X, Wrench } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Database, Github, Twitter, MessageCircle, Menu, X, Wrench, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/auth/user-menu';
 
+const navLinks = [
+  { href: '/', label: 'Dashboard' },
+  { href: 'https://docs.xandeum.network', label: 'Docs', external: true },
+  { href: 'https://www.xandeum.network', label: 'Xandeum', external: true },
+];
+
+const socialLinks = [
+  { href: 'https://github.com/xandeum', icon: Github, label: 'GitHub' },
+  { href: 'https://twitter.com/XandeumNetwork', icon: Twitter, label: 'Twitter' },
+  { href: 'https://discord.gg/uqRSmmM5m', icon: MessageCircle, label: 'Discord' },
+];
+
 export function Header() {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -18,155 +33,219 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`sticky top-0 z-50 w-full transition-all duration-500 ${
         isScrolled
-          ? 'bg-background/80 backdrop-blur-lg border-b border-border/50 shadow-sm'
+          ? 'bg-background/70 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-background/20'
           : 'bg-transparent'
       }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <motion.div 
+              className="relative p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Database className="h-5 w-5 text-primary" />
-            </div>
+              {/* Glow effect */}
+              <motion.div
+                className="absolute inset-0 rounded-xl bg-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </motion.div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg leading-none">Xandeum</span>
-              <span className="text-xs text-muted-foreground leading-none">
+              <span className="font-bold text-lg leading-none tracking-tight">Xandeum</span>
+              <span className="text-[10px] text-muted-foreground leading-none mt-0.5 font-medium">
                 pNode Analytics
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="https://docs.xandeum.network"
-              target="_blank"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Docs
-            </Link>
-            <Link
-              href="https://www.xandeum.network"
-              target="_blank"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Xandeum
-            </Link>
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = !link.external && pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  className="relative px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  <span className={`relative z-10 ${
+                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  }`}>
+                    {link.label}
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute inset-0 bg-primary/10 rounded-lg"
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  {/* Hover underline */}
+                  {!isActive && (
+                    <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary scale-x-0 hover:scale-x-100 transition-transform origin-left" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Social Links, Tools & Auth */}
+          {/* Right side */}
           <div className="flex items-center gap-2">
             {/* Tools Link */}
-            <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
-              <Link href="/tools">
-                <Wrench className="h-4 w-4 mr-1" />
-                Tools
-              </Link>
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="ghost" size="sm" asChild className="hidden sm:flex gap-1.5">
+                <Link href="/tools">
+                  <Wrench className="h-4 w-4" />
+                  Tools
+                </Link>
+              </Button>
+            </motion.div>
 
-            <div className="hidden sm:flex items-center gap-1">
-              <Button variant="ghost" size="icon" asChild>
-                <Link
-                  href="https://github.com/xandeum"
-                  target="_blank"
-                  aria-label="GitHub"
+            {/* Social Links */}
+            <div className="hidden sm:flex items-center gap-0.5">
+              {socialLinks.map((link, i) => (
+                <motion.div
+                  key={link.href}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * i }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <Github className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link
-                  href="https://twitter.com/XandeumNetwork"
-                  target="_blank"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild>
-                <Link
-                  href="https://discord.gg/uqRSmmM5m"
-                  target="_blank"
-                  aria-label="Discord"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </Link>
-              </Button>
+                  <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                    <Link href={link.href} target="_blank" aria-label={link.label}>
+                      <link.icon className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </motion.div>
+              ))}
             </div>
+
+            {/* Separator */}
+            <div className="hidden sm:block w-px h-6 bg-border/50 mx-1" />
 
             {/* User Menu */}
             <UserMenu />
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <AnimatePresence mode="wait">
+                  {isMobileMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <X className="h-5 w-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Menu className="h-5 w-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </motion.div>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border/50">
-            <nav className="flex flex-col gap-4">
-              <Link
-                href="/"
-                className="text-sm font-medium text-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="https://docs.xandeum.network"
-                target="_blank"
-                className="text-sm font-medium text-muted-foreground"
-              >
-                Documentation
-              </Link>
-              <Link
-                href="https://www.xandeum.network"
-                target="_blank"
-                className="text-sm font-medium text-muted-foreground"
-              >
-                Xandeum Website
-              </Link>
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="https://github.com/xandeum" target="_blank">
-                    <Github className="h-4 w-4 mr-2" />
-                    GitHub
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="md:hidden overflow-hidden border-t border-border/50"
+            >
+              <nav className="flex flex-col gap-2 py-4">
+                {navLinks.map((link, i) => (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Link
+                      href={link.href}
+                      target={link.external ? '_blank' : undefined}
+                      className={`block px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        !link.external && pathname === link.href
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
+                
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <Link
+                    href="/tools"
+                    className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                  >
+                    <Wrench className="h-4 w-4 inline mr-2" />
+                    Tools
                   </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="https://discord.gg/uqRSmmM5m" target="_blank">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Discord
-                  </Link>
-                </Button>
-              </div>
-            </nav>
-          </div>
-        )}
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex gap-2 px-4 pt-2"
+                >
+                  {socialLinks.map((link) => (
+                    <Button key={link.href} variant="outline" size="sm" asChild>
+                      <Link href={link.href} target="_blank">
+                        <link.icon className="h-4 w-4 mr-2" />
+                        {link.label}
+                      </Link>
+                    </Button>
+                  ))}
+                </motion.div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </header>
+    </motion.header>
   );
 }

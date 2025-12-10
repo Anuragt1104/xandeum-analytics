@@ -25,8 +25,8 @@ const WorldMap = dynamic(
       <div className="h-[500px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full border-4 border-xandeum-teal/20 border-t-xandeum-teal animate-spin" />
-            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-xandeum-teal" />
+            <div className="w-16 h-16 rounded-full border-4 border-xandeum-green/20 border-t-xandeum-green animate-spin" />
+            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-xandeum-green" />
           </div>
           <span className="text-sm text-muted-foreground">Loading World Map...</span>
         </div>
@@ -105,7 +105,7 @@ export default function HomePage() {
             <TabsList className="bg-card/50 backdrop-blur border border-border/50 p-1 h-auto flex-wrap">
               <TabsTrigger 
                 value="list" 
-                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-teal data-[state=active]:to-xandeum-teal/80 data-[state=active]:text-white transition-all"
+                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-green data-[state=active]:to-xandeum-green/80 data-[state=active]:text-white transition-all"
               >
                 <List className="h-4 w-4" />
                 <span className="hidden sm:inline">Node List</span>
@@ -234,12 +234,12 @@ export default function HomePage() {
             </p>
           </motion.div>
           <motion.div 
-            className="space-y-2 p-4 rounded-lg bg-xandeum-teal/5 border border-xandeum-teal/10"
+            className="space-y-2 p-4 rounded-lg bg-xandeum-green/5 border border-xandeum-green/10"
             whileHover={{ y: -2, borderColor: 'rgba(0, 201, 167, 0.3)' }}
             transition={{ duration: 0.2 }}
           >
             <h3 className="font-medium text-foreground flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-xandeum-teal" />
+              <div className="w-2 h-2 rounded-full bg-xandeum-green" />
               Scalable to Exabytes+
             </h3>
             <p>

@@ -36,23 +36,23 @@ interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
   strength: number;
 }
 
-// Xandeum colors
+// Xandeum brand colors
 const COLORS = {
   orange: '#F5A623',
-  teal: '#00C9A7',
+  green: '#00B39B',
   purple: '#9B59B6',
 };
 
 // Color based on SRI score
 function getSRIColor(sri: number): string {
-  if (sri >= 80) return COLORS.teal;
+  if (sri >= 80) return COLORS.green;
   if (sri >= 60) return COLORS.orange;
   return '#ef4444';
 }
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'online': return COLORS.teal;
+    case 'online': return COLORS.green;
     case 'offline': return '#ef4444';
     case 'degraded': return COLORS.orange;
     default: return '#6b7280';
@@ -78,7 +78,7 @@ function NodeDetailPanel({ node, onClose, onViewDetails }: {
       className="absolute top-4 left-4 w-72 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl z-20 overflow-hidden"
     >
       {/* Xandeum gradient accent */}
-      <div className="h-1 bg-gradient-to-r from-xandeum-orange via-xandeum-teal to-xandeum-purple" />
+      <div className="h-1 bg-gradient-to-r from-xandeum-orange via-xandeum-green to-xandeum-purple" />
       
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
@@ -117,7 +117,7 @@ function NodeDetailPanel({ node, onClose, onViewDetails }: {
               variant="outline"
               className={`text-[10px] ${
                 node.node.status === 'online'
-                  ? 'bg-xandeum-teal/10 text-xandeum-teal border-xandeum-teal/30'
+                  ? 'bg-xandeum-green/10 text-xandeum-green border-xandeum-green/30'
                   : node.node.status === 'degraded'
                   ? 'bg-xandeum-orange/10 text-xandeum-orange border-xandeum-orange/30'
                   : 'bg-red-500/10 text-red-500 border-red-500/30'
@@ -144,7 +144,7 @@ function NodeDetailPanel({ node, onClose, onViewDetails }: {
           </div>
         </div>
 
-        <Button onClick={onViewDetails} size="sm" className="w-full bg-gradient-to-r from-xandeum-teal to-xandeum-purple hover:opacity-90">
+        <Button onClick={onViewDetails} size="sm" className="w-full bg-gradient-to-r from-xandeum-green to-xandeum-purple hover:opacity-90">
           View Full Details
         </Button>
       </div>
@@ -176,7 +176,7 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
         ? getSRIColor(node.sri)
         : colorBy === 'status'
         ? getStatusColor(node.status)
-        : node.isLatestVersion ? COLORS.teal : COLORS.orange,
+        : node.isLatestVersion ? COLORS.green : COLORS.orange,
     }));
 
     const links: GraphLink[] = [];
@@ -296,9 +296,9 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
       .attr('gradientUnits', 'userSpaceOnUse')
       .selectAll('stop')
       .data([
-        { offset: '0%', color: COLORS.teal },
+        { offset: '0%', color: COLORS.green },
         { offset: '50%', color: COLORS.purple },
-        { offset: '100%', color: COLORS.teal },
+        { offset: '100%', color: COLORS.green },
       ])
       .join('stop')
       .attr('offset', (d) => d.offset)
@@ -479,14 +479,14 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
       <Card className="bg-card/50 backdrop-blur border-border/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Network className="h-4 w-4 text-xandeum-teal" />
+            <Network className="h-4 w-4 text-xandeum-green" />
             Network Topology
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[500px] flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 border-2 border-xandeum-teal/30 border-t-xandeum-teal rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-xandeum-green/30 border-t-xandeum-green rounded-full animate-spin" />
               <span className="text-sm text-muted-foreground">Building topology...</span>
             </div>
           </div>
@@ -520,13 +520,13 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
             </Select>
 
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-muted/50">
-              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleZoomOut}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleZoomOut}>
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleZoomIn}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleZoomIn}>
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleResetZoom}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleResetZoom}>
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-xandeum-orange/10 hover:text-xandeum-orange" onClick={toggleSimulation}>
@@ -565,7 +565,7 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
             {colorBy === 'sri' && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.teal, boxShadow: `0 0 6px ${COLORS.teal}` }} />
+                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.green, boxShadow: `0 0 6px ${COLORS.green}` }} />
                   <span className="text-muted-foreground">High (80+)</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -581,7 +581,7 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
             {colorBy === 'status' && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.teal }} />
+                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.green }} />
                   <span className="text-muted-foreground">Online</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -597,7 +597,7 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
             {colorBy === 'version' && (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.teal }} />
+                  <div className="w-3 h-3 rounded-full" style={{ background: COLORS.green }} />
                   <span className="text-muted-foreground">Latest Version</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -618,7 +618,7 @@ export function TopologyGraph({ nodes, isLoading, onNodeClick }: TopologyGraphPr
                 className="absolute top-4 right-4 bg-card/90 backdrop-blur-lg p-3 rounded-lg text-xs z-10 min-w-[160px] border border-border/50"
               >
                 <div className="font-medium mb-2 flex items-center gap-1">
-                  <Info className="h-3 w-3 text-xandeum-teal" />
+                  <Info className="h-3 w-3 text-xandeum-green" />
                   Quick View
                 </div>
                 <div className="space-y-1.5">

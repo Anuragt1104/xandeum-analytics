@@ -32,11 +32,11 @@ interface WorldMapProps {
   onNodeClick?: (node: PNode) => void;
 }
 
-// Get status color
+// Get status color - Xandeum brand colors
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'online': return '#00C9A7'; // teal
-    case 'degraded': return '#F5A623'; // orange
+    case 'online': return '#00B39B'; // xandeum green
+    case 'degraded': return '#F5A623'; // xandeum orange
     case 'offline': return '#ef4444'; // red
     default: return '#6b7280';
   }
@@ -65,7 +65,7 @@ function NodeInfoPanel({
       className="absolute top-4 right-4 w-80 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl overflow-hidden z-[1000]"
     >
       {/* Gradient accent using Xandeum colors */}
-      <div className="h-1 bg-gradient-to-r from-xandeum-orange via-xandeum-teal to-xandeum-purple" />
+      <div className="h-1 bg-gradient-to-r from-xandeum-orange via-xandeum-green to-xandeum-purple" />
       
       <div className="p-4">
         <div className="flex items-start justify-between mb-4">
@@ -115,7 +115,7 @@ function NodeInfoPanel({
               variant="outline"
               className={`text-[10px] ${
                 node.status === 'online'
-                  ? 'bg-xandeum-teal/10 text-xandeum-teal border-xandeum-teal/30'
+                  ? 'bg-xandeum-green/10 text-xandeum-green border-xandeum-green/30'
                   : node.status === 'degraded'
                   ? 'bg-xandeum-orange/10 text-xandeum-orange border-xandeum-orange/30'
                   : 'bg-red-500/10 text-red-500 border-red-500/30'
@@ -123,7 +123,7 @@ function NodeInfoPanel({
             >
               <span className="relative flex h-2 w-2 mr-1">
                 {node.status === 'online' && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-xandeum-teal opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-xandeum-green opacity-75"></span>
                 )}
                 <span className={`relative inline-flex rounded-full h-2 w-2`} 
                   style={{ backgroundColor: getStatusColor(node.status) }}
@@ -135,7 +135,7 @@ function NodeInfoPanel({
           <div className="p-2 rounded-lg bg-muted/50">
             <span className="text-muted-foreground block mb-1">Latency</span>
             <span className={`font-bold ${
-              node.rpcLatency < 100 ? 'text-xandeum-teal' :
+              node.rpcLatency < 100 ? 'text-xandeum-green' :
               node.rpcLatency < 300 ? 'text-xandeum-orange' : 'text-red-500'
             }`}>{node.rpcLatency}ms</span>
           </div>
@@ -145,7 +145,7 @@ function NodeInfoPanel({
           </div>
           <div className="p-2 rounded-lg bg-muted/50">
             <span className="text-muted-foreground block mb-1">Uptime</span>
-            <span className="font-bold text-xandeum-teal">{node.uptimePercent.toFixed(1)}%</span>
+            <span className="font-bold text-xandeum-green">{node.uptimePercent.toFixed(1)}%</span>
           </div>
           <div className="p-2 rounded-lg bg-muted/50">
             <span className="text-muted-foreground block mb-1">Version</span>
@@ -171,7 +171,7 @@ function NodeInfoPanel({
         </div>
         
         <Link href={`/node/${node.pubkey}`}>
-          <Button className="w-full gap-2 bg-gradient-to-r from-xandeum-teal to-xandeum-purple hover:opacity-90">
+          <Button className="w-full gap-2 bg-gradient-to-r from-xandeum-green to-xandeum-purple hover:opacity-90">
             <Activity className="h-4 w-4" />
             View Full Analytics
             <ExternalLink className="h-3 w-3" />
@@ -355,22 +355,22 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Globe2 className="h-4 w-4 text-xandeum-teal" />
+            <Globe2 className="h-4 w-4 text-xandeum-green" />
             Global Network Distribution
-            <Badge variant="secondary" className="ml-2 text-xs bg-xandeum-teal/10 text-xandeum-teal border-xandeum-teal/30">
+            <Badge variant="secondary" className="ml-2 text-xs bg-xandeum-green/10 text-xandeum-green border-xandeum-green/30">
               {onlineCount} online • {uniqueCountries} countries
             </Badge>
           </CardTitle>
           
           {/* Controls */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleZoomIn}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleZoomIn}>
               <ZoomIn className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleZoomOut}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleZoomOut}>
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-teal/10 hover:text-xandeum-teal" onClick={handleReset}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleReset}>
               <RotateCcw className="h-4 w-4" />
             </Button>
             <div className="w-px h-6 bg-border mx-1" />
@@ -439,7 +439,7 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
         {isLoading && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-[600]">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-10 h-10 rounded-full border-2 border-xandeum-teal/30 border-t-xandeum-teal animate-spin" />
+              <div className="w-10 h-10 rounded-full border-2 border-xandeum-green/30 border-t-xandeum-green animate-spin" />
               <span className="text-sm text-muted-foreground">Loading nodes...</span>
             </div>
           </div>

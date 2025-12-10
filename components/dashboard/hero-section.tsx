@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, Globe, Shield } from 'lucide-react';
 import { staggerContainer, staggerItem, fadeInUp } from '@/lib/animations';
 import type { NetworkStats } from '@/lib/types';
+import Image from 'next/image';
 
 interface HeroSectionProps {
   stats: NetworkStats | null;
@@ -82,28 +83,40 @@ function AnimatedTitle({ text }: { text: string }) {
   );
 }
 
-// Live pulse animation showing network activity
+// Pre-calculated positions to avoid hydration mismatch
+const PULSE_POSITIONS = [
+  { left: 15, top: 20, size: 5, duration: 2.5 },
+  { left: 35, top: 60, size: 6, duration: 3.0 },
+  { left: 55, top: 30, size: 4, duration: 2.8 },
+  { left: 75, top: 70, size: 5, duration: 3.2 },
+  { left: 25, top: 80, size: 6, duration: 2.6 },
+  { left: 65, top: 15, size: 4, duration: 3.4 },
+  { left: 45, top: 45, size: 5, duration: 2.9 },
+  { left: 85, top: 40, size: 6, duration: 3.1 },
+];
+
+// Live pulse animation showing network activity - with fixed positions
 function NetworkPulse({ activeNodes }: { activeNodes: number }) {
   const pulseCount = Math.min(8, Math.max(3, Math.floor(activeNodes / 5)));
   
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(pulseCount)].map((_, i) => (
+      {PULSE_POSITIONS.slice(0, pulseCount).map((pos, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full bg-primary/20"
+          className="absolute rounded-full bg-xandeum-green/30"
           style={{
-            width: 4 + Math.random() * 4,
-            height: 4 + Math.random() * 4,
-            left: `${10 + Math.random() * 80}%`,
-            top: `${10 + Math.random() * 80}%`,
+            width: pos.size,
+            height: pos.size,
+            left: `${pos.left}%`,
+            top: `${pos.top}%`,
           }}
           animate={{
             scale: [1, 2, 1],
             opacity: [0.5, 0.8, 0.5],
           }}
           transition={{
-            duration: 2 + Math.random() * 2,
+            duration: pos.duration,
             repeat: Infinity,
             delay: i * 0.3,
             ease: 'easeInOut',
@@ -115,12 +128,12 @@ function NetworkPulse({ activeNodes }: { activeNodes: number }) {
       <svg className="absolute inset-0 w-full h-full">
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0" />
-            <stop offset="50%" stopColor="var(--primary)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--xandeum-green)" stopOpacity="0" />
+            <stop offset="50%" stopColor="var(--xandeum-green)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="var(--xandeum-green)" stopOpacity="0" />
           </linearGradient>
         </defs>
-        {[...Array(3)].map((_, i) => (
+        {[0, 1, 2].map((i) => (
           <motion.line
             key={i}
             x1={`${20 + i * 30}%`}
@@ -150,12 +163,14 @@ function QuickStat({
   label, 
   value, 
   suffix = '',
+  color = 'xandeum-green',
   delay = 0 
 }: { 
   icon: React.ElementType; 
   label: string; 
   value: number;
   suffix?: string;
+  color?: string;
   delay?: number;
 }) {
   const animatedValue = useAnimatedCounter(value, 2000);
@@ -163,11 +178,11 @@ function QuickStat({
   return (
     <motion.div
       variants={staggerItem}
-      className="flex items-center gap-3 px-4 py-2 rounded-full bg-card/50 backdrop-blur border border-border/50 hover:border-primary/30 transition-colors"
+      className={`flex items-center gap-3 px-4 py-2 rounded-full bg-card/50 backdrop-blur border border-border/50 hover:border-${color}/30 transition-colors`}
       whileHover={{ scale: 1.02, y: -2 }}
     >
-      <div className="p-1.5 rounded-full bg-primary/10">
-        <Icon className="h-4 w-4 text-primary" />
+      <div className={`p-1.5 rounded-full bg-${color}/10`}>
+        <Icon className={`h-4 w-4 text-${color}`} />
       </div>
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground">{label}</span>
@@ -202,8 +217,8 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
       {/* Background effects */}
       <NetworkPulse activeNodes={stats?.activeNodes || 0} />
       
-      {/* Gradient orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-primary/10 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
+      {/* Gradient orb with Xandeum colors */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-xandeum-green/10 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
       
       <motion.div
         className="relative z-10 space-y-8"
@@ -211,27 +226,44 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
         animate="visible"
         variants={staggerContainer}
       >
-        {/* Main title with letter animation */}
+        {/* Logo and title */}
         <div className="space-y-4">
           <motion.div 
             variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-xandeum-green/10 border border-xandeum-green/20 text-sm text-xandeum-green"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-xandeum-green opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-xandeum-green"></span>
             </span>
             Live Network Monitoring
           </motion.div>
           
-          <AnimatedTitle text="pNode Network Dashboard" />
+          {/* Xandeum Logo */}
+          <motion.div 
+            variants={fadeInUp}
+            className="flex items-center gap-4 mb-4"
+          >
+            <Image
+              src="/xandeum-logo.png"
+              alt="Xandeum"
+              width={180}
+              height={40}
+              className="h-10 w-auto"
+              priority
+            />
+            <div className="h-8 w-px bg-border" />
+            <span className="text-sm font-medium text-muted-foreground">pNode Analytics</span>
+          </motion.div>
+          
+          <AnimatedTitle text="Network Dashboard" />
           
           <motion.p
             variants={fadeInUp}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl"
           >
-            Real-time analytics for the <span className="text-primary font-medium">Xandeum</span> decentralized storage network. 
-            Monitor node health, track performance, and explore the infrastructure powering Solana dApps.
+            Real-time analytics for the decentralized storage network. 
+            Monitor node health, track performance, and explore the infrastructure powering <span className="text-xandeum-green font-medium">Solana dApps</span>.
           </motion.p>
         </div>
 
@@ -244,12 +276,14 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
             icon={Globe}
             label="Active Nodes"
             value={stats?.activeNodes || 0}
+            color="xandeum-green"
             delay={0}
           />
           <QuickStat
             icon={Activity}
             label="Avg. SRI"
             value={stats?.averageSri || 0}
+            color="xandeum-orange"
             delay={0.1}
           />
           <QuickStat
@@ -257,6 +291,7 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
             label="Avg. Latency"
             value={stats?.averageLatency || 0}
             suffix="ms"
+            color="xandeum-purple"
             delay={0.2}
           />
           <QuickStat
@@ -264,6 +299,7 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
             label="Uptime"
             value={Math.round(stats?.averageUptime || 0)}
             suffix="%"
+            color="xandeum-green"
             delay={0.3}
           />
         </motion.div>
@@ -271,4 +307,3 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
     </div>
   );
 }
-

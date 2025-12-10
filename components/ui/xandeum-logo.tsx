@@ -11,163 +11,182 @@ interface XandeumLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 28, text: 'text-sm' },
-  md: { icon: 36, text: 'text-lg' },
-  lg: { icon: 48, text: 'text-2xl' },
-  xl: { icon: 64, text: 'text-3xl' },
+  sm: { width: 100, height: 22 },
+  md: { width: 140, height: 31 },
+  lg: { width: 180, height: 40 },
+  xl: { width: 220, height: 48 },
 };
 
 export function XandeumLogo({ 
   size = 'md', 
   animated = true, 
   className = '',
-  showText = true 
+  showText = false 
 }: XandeumLogoProps) {
-  const { icon, text } = sizes[size];
+  const { width, height } = sizes[size];
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <motion.div
-        className="relative"
-        whileHover={animated ? { scale: 1.05 } : {}}
-        whileTap={animated ? { scale: 0.95 } : {}}
-      >
-        {/* Glow effect */}
-        {animated && (
-          <motion.div
-            className="absolute inset-0 rounded-xl blur-xl opacity-40"
-            style={{
-              background: 'linear-gradient(135deg, #F5A623, #00C9A7, #9B59B6)',
-            }}
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
-        )}
-        
-        {/* Xandeum X Logo - Three triangular shapes forming X */}
-        <svg
-          width={icon}
-          height={icon}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="relative z-10"
-        >
-          <defs>
-            <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F5A623" />
-              <stop offset="100%" stopColor="#E09612" />
-            </linearGradient>
-            <linearGradient id="tealGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#00C9A7" />
-              <stop offset="100%" stopColor="#00B396" />
-            </linearGradient>
-            <linearGradient id="purpleGrad" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#9B59B6" />
-              <stop offset="100%" stopColor="#8E44AD" />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          
-          {/* Orange top-left triangle pointing down-right */}
-          <motion.path
-            d="M8 8 L32 32 L8 32 Z"
-            fill="url(#orangeGrad)"
-            filter="url(#glow)"
-            initial={animated ? { opacity: 0, scale: 0.8 } : {}}
-            animate={animated ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0 }}
-          />
-          <motion.path
-            d="M8 8 L32 8 L32 32 Z"
-            fill="url(#orangeGrad)"
-            filter="url(#glow)"
-            initial={animated ? { opacity: 0, scale: 0.8 } : {}}
-            animate={animated ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          />
-          
-          {/* Teal top-right triangle pointing down-left */}
-          <motion.path
-            d="M56 8 L32 32 L56 32 Z"
-            fill="url(#tealGrad)"
-            filter="url(#glow)"
-            initial={animated ? { opacity: 0, scale: 0.8 } : {}}
-            animate={animated ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.15 }}
-          />
-          <motion.path
-            d="M56 8 L32 8 L32 32 Z"
-            fill="url(#tealGrad)"
-            filter="url(#glow)"
-            initial={animated ? { opacity: 0, scale: 0.8 } : {}}
-            animate={animated ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          />
-          
-          {/* Purple bottom triangle */}
-          <motion.path
-            d="M8 56 L32 32 L56 56 Z"
-            fill="url(#purpleGrad)"
-            filter="url(#glow)"
-            initial={animated ? { opacity: 0, scale: 0.8 } : {}}
-            animate={animated ? { opacity: 1, scale: 1 } : {}}
-            transition={{ duration: 0.5, delay: 0.25 }}
-          />
-        </svg>
-      </motion.div>
+    <motion.div
+      className={`relative flex items-center gap-2.5 ${className}`}
+      initial={animated ? { opacity: 0, scale: 0.9 } : {}}
+      animate={animated ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.5, type: 'spring', stiffness: 150 }}
+      whileHover={animated ? { scale: 1.02 } : {}}
+    >
+      {/* Glow effect */}
+      {animated && (
+        <motion.div
+          className="absolute inset-0 rounded-lg blur-xl opacity-30"
+          style={{
+            background: 'linear-gradient(135deg, #F5A623, #00B39B, #9B59B6)',
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
+      
+      {/* Actual Xandeum Logo from website */}
+      <Image
+        src="/xandeum-logo.png"
+        alt="Xandeum"
+        width={width}
+        height={height}
+        className="relative z-10 h-auto"
+        priority
+      />
       
       {showText && (
-        <motion.div
-          className="flex flex-col"
+        <motion.span
+          className="text-xs text-muted-foreground font-medium"
           initial={animated ? { opacity: 0, x: -10 } : {}}
           animate={animated ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <span className={`font-bold ${text} tracking-tight bg-gradient-to-r from-xandeum-orange via-xandeum-teal to-xandeum-purple bg-clip-text text-transparent`}>
-            Xandeum
-          </span>
-          <span className="text-[10px] text-muted-foreground leading-none -mt-0.5">
-            pNode Analytics
-          </span>
-        </motion.div>
+          pNode Analytics
+        </motion.span>
       )}
-    </div>
+    </motion.div>
   );
 }
 
-// Animated background logo for hero sections
-export function XandeumLogoBackground({ className = '' }: { className?: string }) {
+// Icon-only version using the trilemma X shape
+export function XandeumIcon({ 
+  size = 32, 
+  animated = true,
+  className = '' 
+}: { 
+  size?: number;
+  animated?: boolean;
+  className?: string;
+}) {
   return (
-    <div className={`absolute pointer-events-none opacity-5 ${className}`}>
-      <motion.svg
-        width="400"
-        height="400"
+    <motion.div
+      className={`relative ${className}`}
+      initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+      animate={animated ? { opacity: 1, scale: 1 } : {}}
+      whileHover={animated ? { scale: 1.05 } : {}}
+    >
+      {/* Glow */}
+      {animated && (
+        <motion.div
+          className="absolute inset-0 rounded-full blur-lg"
+          style={{
+            background: 'linear-gradient(135deg, #F5A623, #00B39B, #9B59B6)',
+          }}
+          animate={{
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
+      
+      <svg
+        width={size}
+        height={size}
         viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+        className="relative z-10"
       >
-        <path d="M8 8 L32 32 L8 32 Z" fill="currentColor" />
-        <path d="M8 8 L32 8 L32 32 Z" fill="currentColor" />
-        <path d="M56 8 L32 32 L56 32 Z" fill="currentColor" />
-        <path d="M56 8 L32 8 L32 32 Z" fill="currentColor" />
-        <path d="M8 56 L32 32 L56 56 Z" fill="currentColor" />
-      </motion.svg>
-    </div>
+        <defs>
+          <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#F5A623" />
+            <stop offset="100%" stopColor="#E09612" />
+          </linearGradient>
+          <linearGradient id="greenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#00B39B" />
+            <stop offset="100%" stopColor="#009E89" />
+          </linearGradient>
+          <linearGradient id="purpleGrad" x1="100%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#9B59B6" />
+            <stop offset="100%" stopColor="#8E44AD" />
+          </linearGradient>
+          <filter id="iconGlow">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
+        {/* Orange top-left shape */}
+        <motion.path
+          d="M8 8 L32 32 L8 32 Z"
+          fill="url(#orangeGrad)"
+          filter="url(#iconGlow)"
+          initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+          animate={animated ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0 }}
+        />
+        <motion.path
+          d="M8 8 L32 8 L32 32 Z"
+          fill="url(#orangeGrad)"
+          filter="url(#iconGlow)"
+          initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+          animate={animated ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        />
+        
+        {/* Green top-right shape */}
+        <motion.path
+          d="M56 8 L32 32 L56 32 Z"
+          fill="url(#greenGrad)"
+          filter="url(#iconGlow)"
+          initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+          animate={animated ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        />
+        <motion.path
+          d="M56 8 L32 8 L32 32 Z"
+          fill="url(#greenGrad)"
+          filter="url(#iconGlow)"
+          initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+          animate={animated ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        />
+        
+        {/* Purple bottom shape */}
+        <motion.path
+          d="M8 56 L32 32 L56 56 Z"
+          fill="url(#purpleGrad)"
+          filter="url(#iconGlow)"
+          initial={animated ? { opacity: 0, scale: 0.8 } : {}}
+          animate={animated ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.25 }}
+        />
+      </svg>
+    </motion.div>
   );
 }

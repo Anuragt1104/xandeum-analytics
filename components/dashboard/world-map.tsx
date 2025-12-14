@@ -20,7 +20,10 @@ import {
   MapPin,
   X,
   Activity,
-  ExternalLink 
+  ExternalLink,
+  Layers,
+  Mountain,
+  Moon
 } from 'lucide-react';
 import type { PNode } from '@/lib/types';
 import { truncatePubkey, formatBytes } from '@/lib/prpc-client';
@@ -31,6 +34,8 @@ interface WorldMapProps {
   isLoading?: boolean;
   onNodeClick?: (node: PNode) => void;
 }
+
+type MapStyle = 'satellite' | 'topo' | 'dark';
 
 // Get status color - Xandeum brand colors
 function getStatusColor(status: string): string {
@@ -185,10 +190,12 @@ function NodeInfoPanel({
 export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<L.MarkerClusterGroup | null>(null);
   const [selectedNode, setSelectedNode] = useState<PNode | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mapStyle, setMapStyle] = useState<MapStyle>('satellite');
 
   // Initialize map
   useEffect(() => {
@@ -203,11 +210,6 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
       zoomControl: false,
       attributionControl: false,
     });
-
-    // Dark tile layer matching Xandeum's deep blue theme
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-    }).addTo(leafletMapRef.current);
 
     // Initialize marker cluster group with custom styling
     markersRef.current = L.markerClusterGroup({
@@ -263,6 +265,45 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
     };
   }, []);
 
+  // Handle map style changes
+  useEffect(() => {
+    if (!leafletMapRef.current) return;
+
+    // Remove existing layer
+    if (tileLayerRef.current) {
+      tileLayerRef.current.remove();
+    }
+
+    let url = '';
+    let attribution = '';
+
+    switch (mapStyle) {
+      case 'satellite':
+        url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+        break;
+      case 'topo':
+        url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+        attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+        break;
+      case 'dark':
+      default:
+        url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+        break;
+    }
+
+    tileLayerRef.current = L.tileLayer(url, {
+      maxZoom: 19,
+      attribution
+    }).addTo(leafletMapRef.current);
+
+    // Bring markers to front
+    if (markersRef.current) {
+      markersRef.current.bringToFront();
+    }
+  }, [mapStyle]);
+
   // Update markers when nodes change
   useEffect(() => {
     if (!markersRef.current || !leafletMapRef.current) return;
@@ -272,21 +313,39 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
     nodes.forEach((node) => {
       if (node.geoLatitude && node.geoLongitude) {
         const color = getStatusColor(node.status);
-        const size = node.status === 'online' ? 12 : 8;
+        const size = node.status === 'online' ? 14 : 10;
+        
+        // Advanced pulsing marker for satellite view
+        const isSatellite = mapStyle === 'satellite';
+        const shadowColor = isSatellite ? 'rgba(255, 255, 255, 0.8)' : color;
         
         const icon = L.divIcon({
-          className: 'map-marker',
+          className: 'map-marker-container',
           html: `
-            <div style="
-              width: ${size}px;
-              height: ${size}px;
-              background: ${color};
-              border-radius: 50%;
-              box-shadow: 0 0 ${node.status === 'online' ? '12px' : '6px'} ${color};
-              border: 2px solid rgba(255,255,255,0.4);
-              cursor: pointer;
-              transition: transform 0.2s ease;
-            "></div>
+            <div style="position: relative; width: ${size}px; height: ${size}px;">
+              ${node.status === 'online' ? `
+                <div class="animate-ping" style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  border-radius: 50%;
+                  background-color: ${color};
+                  opacity: 0.75;
+                "></div>
+              ` : ''}
+              <div style="
+                position: relative;
+                width: 100%;
+                height: 100%;
+                background: ${color};
+                border-radius: 50%;
+                box-shadow: 0 0 10px ${shadowColor};
+                border: 2px solid white;
+                cursor: pointer;
+              "></div>
+            </div>
           `,
           iconSize: [size, size],
           iconAnchor: [size / 2, size / 2],
@@ -299,26 +358,10 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
           if (onNodeClick) onNodeClick(node);
         });
 
-        marker.on('mouseover', function(e) {
-          const el = e.target.getElement();
-          if (el) {
-            el.style.transform = 'scale(1.5)';
-            el.style.zIndex = '1000';
-          }
-        });
-
-        marker.on('mouseout', function(e) {
-          const el = e.target.getElement();
-          if (el) {
-            el.style.transform = 'scale(1)';
-            el.style.zIndex = '';
-          }
-        });
-
         markersRef.current?.addLayer(marker);
       }
     });
-  }, [nodes, onNodeClick]);
+  }, [nodes, onNodeClick, mapStyle]);
 
   // Handle fullscreen
   useEffect(() => {
@@ -352,7 +395,7 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
 
   const cardContent = (
     <>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 relative z-10">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Globe2 className="h-4 w-4 text-xandeum-green" />
@@ -364,6 +407,37 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
           
           {/* Controls */}
           <div className="flex items-center gap-1">
+            {/* Style Toggle */}
+            <div className="flex items-center bg-background/50 backdrop-blur rounded-lg border border-border/50 p-0.5 mr-2">
+              <Button
+                variant={mapStyle === 'satellite' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setMapStyle('satellite')}
+                title="Satellite View"
+              >
+                <Layers className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant={mapStyle === 'topo' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setMapStyle('topo')}
+                title="Topographical View"
+              >
+                <Mountain className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant={mapStyle === 'dark' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setMapStyle('dark')}
+                title="Dark Mode"
+              >
+                <Moon className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-xandeum-green/10 hover:text-xandeum-green" onClick={handleZoomIn}>
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -413,16 +487,6 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
               <span className="text-muted-foreground">Offline</span>
             </div>
           </div>
-        </motion.div>
-
-        {/* Instructions */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="absolute top-4 left-4 bg-card/80 backdrop-blur px-3 py-1.5 rounded-lg text-[10px] text-muted-foreground z-[500] border border-border/50"
-        >
-          🖱️ Click clusters to expand • Click node for details
         </motion.div>
 
         {/* Selected node panel */}

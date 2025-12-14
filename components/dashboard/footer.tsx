@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Database, Github, Twitter, MessageCircle, Heart } from 'lucide-react';
+import { Github, Twitter, MessageCircle, Heart } from 'lucide-react';
+import { XandeumLogo } from '@/components/ui/xandeum-logo';
 
 export function Footer() {
   return (
@@ -10,17 +11,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Database className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold">Xandeum</span>
-                <span className="text-xs text-muted-foreground">
-                  pNode Analytics
-                </span>
-              </div>
-            </div>
+            <Link href="/" className="inline-block">
+              <XandeumLogo size="md" animated={false} showText={true} />
+            </Link>
             <p className="text-sm text-muted-foreground">
               Real-time analytics platform for Xandeum pNodes, the decentralized
               storage layer for Solana.

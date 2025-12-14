@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Activity, Zap, Globe, Shield } from 'lucide-react';
 import { staggerContainer, staggerItem, fadeInUp } from '@/lib/animations';
 import type { NetworkStats } from '@/lib/types';
-import Image from 'next/image';
+import { BackgroundParticles } from '@/components/ui/background-particles';
 
 interface HeroSectionProps {
   stats: NetworkStats | null;
@@ -83,80 +83,6 @@ function AnimatedTitle({ text }: { text: string }) {
   );
 }
 
-// Pre-calculated positions to avoid hydration mismatch
-const PULSE_POSITIONS = [
-  { left: 15, top: 20, size: 5, duration: 2.5 },
-  { left: 35, top: 60, size: 6, duration: 3.0 },
-  { left: 55, top: 30, size: 4, duration: 2.8 },
-  { left: 75, top: 70, size: 5, duration: 3.2 },
-  { left: 25, top: 80, size: 6, duration: 2.6 },
-  { left: 65, top: 15, size: 4, duration: 3.4 },
-  { left: 45, top: 45, size: 5, duration: 2.9 },
-  { left: 85, top: 40, size: 6, duration: 3.1 },
-];
-
-// Live pulse animation showing network activity - with fixed positions
-function NetworkPulse({ activeNodes }: { activeNodes: number }) {
-  const pulseCount = Math.min(8, Math.max(3, Math.floor(activeNodes / 5)));
-  
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {PULSE_POSITIONS.slice(0, pulseCount).map((pos, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full bg-xandeum-green/30"
-          style={{
-            width: pos.size,
-            height: pos.size,
-            left: `${pos.left}%`,
-            top: `${pos.top}%`,
-          }}
-          animate={{
-            scale: [1, 2, 1],
-            opacity: [0.5, 0.8, 0.5],
-          }}
-          transition={{
-            duration: pos.duration,
-            repeat: Infinity,
-            delay: i * 0.3,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-      
-      {/* Connection lines */}
-      <svg className="absolute inset-0 w-full h-full">
-        <defs>
-          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--xandeum-green)" stopOpacity="0" />
-            <stop offset="50%" stopColor="var(--xandeum-green)" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="var(--xandeum-green)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[0, 1, 2].map((i) => (
-          <motion.line
-            key={i}
-            x1={`${20 + i * 30}%`}
-            y1="0%"
-            x2={`${30 + i * 30}%`}
-            y2="100%"
-            stroke="url(#lineGradient)"
-            strokeWidth="1"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.5 }}
-            transition={{
-              duration: 3,
-              delay: i * 0.5,
-              repeat: Infinity,
-              repeatType: 'loop',
-            }}
-          />
-        ))}
-      </svg>
-    </div>
-  );
-}
-
 // Quick stat badge
 function QuickStat({ 
   icon: Icon, 
@@ -178,10 +104,10 @@ function QuickStat({
   return (
     <motion.div
       variants={staggerItem}
-      className={`flex items-center gap-3 px-4 py-2 rounded-full bg-card/50 backdrop-blur border border-border/50 hover:border-${color}/30 transition-colors`}
-      whileHover={{ scale: 1.02, y: -2 }}
+      className={`flex items-center gap-3 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-white/5 hover:border-${color}/30 transition-all duration-300 hover:bg-card/60`}
+      whileHover={{ scale: 1.05, y: -2 }}
     >
-      <div className={`p-1.5 rounded-full bg-${color}/10`}>
+      <div className={`p-1.5 rounded-full bg-${color}/10 ring-1 ring-${color}/20`}>
         <Icon className={`h-4 w-4 text-${color}`} />
       </div>
       <div className="flex flex-col">
@@ -203,7 +129,7 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
 
   if (!mounted) {
     return (
-      <div className="relative py-12 md:py-16">
+      <div className="relative py-12 md:py-24">
         <div className="space-y-6">
           <div className="h-16 bg-muted/20 rounded-lg animate-pulse" />
           <div className="h-6 w-2/3 bg-muted/20 rounded-lg animate-pulse" />
@@ -213,24 +139,30 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
   }
 
   return (
-    <div className="relative py-12 md:py-16 overflow-hidden">
-      {/* Background effects */}
-      <NetworkPulse activeNodes={stats?.activeNodes || 0} />
+    <div className="relative py-12 md:py-24 overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-b from-[#0A1628]/50 to-[#0A1628]">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 z-0">
+        <BackgroundParticles />
+        {/* Gradient overlays for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/80 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#0A1628] to-transparent" />
+      </div>
       
-      {/* Gradient orb with Xandeum colors */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-xandeum-green/10 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
-      
+      {/* Glowing orb effect */}
+      <div className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] bg-xandeum-green/20 rounded-full blur-[120px] pointer-events-none opacity-50 mix-blend-screen animate-pulse" />
+      <div className="absolute -bottom-[200px] -left-[200px] w-[500px] h-[500px] bg-xandeum-purple/10 rounded-full blur-[100px] pointer-events-none opacity-40 mix-blend-screen" />
+
       <motion.div
-        className="relative z-10 space-y-8"
+        className="relative z-10 px-6 md:px-10"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        {/* Logo and title */}
-        <div className="space-y-4">
+        <div className="space-y-6 max-w-4xl">
+          {/* Status Badge */}
           <motion.div 
             variants={fadeInUp}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-xandeum-green/10 border border-xandeum-green/20 text-sm text-xandeum-green"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-xandeum-green/10 border border-xandeum-green/20 text-sm text-xandeum-green backdrop-blur-md"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-xandeum-green opacity-75"></span>
@@ -239,53 +171,55 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
             Live Network Monitoring
           </motion.div>
           
+          {/* Main Title */}
           <AnimatedTitle text="Network Dashboard" />
           
+          {/* Description */}
           <motion.p
             variants={fadeInUp}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl"
+            className="text-lg md:text-xl text-muted-foreground/90 max-w-2xl leading-relaxed"
           >
             Real-time analytics for the decentralized storage network. 
-            Monitor node health, track performance, and explore the infrastructure powering <span className="text-xandeum-green font-medium">Solana dApps</span>.
+            Monitor node health, track performance, and explore the infrastructure powering <span className="text-xandeum-green font-medium glow-green">Solana dApps</span>.
           </motion.p>
-        </div>
 
-        {/* Quick stats row */}
-        <motion.div
-          variants={staggerContainer}
-          className="flex flex-wrap gap-3"
-        >
-          <QuickStat
-            icon={Globe}
-            label="Active Nodes"
-            value={stats?.activeNodes || 0}
-            color="xandeum-green"
-            delay={0}
-          />
-          <QuickStat
-            icon={Activity}
-            label="Avg. SRI"
-            value={stats?.averageSri || 0}
-            color="xandeum-orange"
-            delay={0.1}
-          />
-          <QuickStat
-            icon={Zap}
-            label="Avg. Latency"
-            value={stats?.averageLatency || 0}
-            suffix="ms"
-            color="xandeum-purple"
-            delay={0.2}
-          />
-          <QuickStat
-            icon={Shield}
-            label="Uptime"
-            value={Math.round(stats?.averageUptime || 0)}
-            suffix="%"
-            color="xandeum-green"
-            delay={0.3}
-          />
-        </motion.div>
+          {/* Stats Grid */}
+          <motion.div
+            variants={staggerContainer}
+            className="flex flex-wrap gap-4 pt-4"
+          >
+            <QuickStat
+              icon={Globe}
+              label="Active Nodes"
+              value={stats?.activeNodes || 0}
+              color="xandeum-green"
+              delay={0}
+            />
+            <QuickStat
+              icon={Activity}
+              label="Avg. SRI"
+              value={stats?.averageSri || 0}
+              color="xandeum-orange"
+              delay={0.1}
+            />
+            <QuickStat
+              icon={Zap}
+              label="Avg. Latency"
+              value={stats?.averageLatency || 0}
+              suffix="ms"
+              color="xandeum-purple"
+              delay={0.2}
+            />
+            <QuickStat
+              icon={Shield}
+              label="Uptime"
+              value={Math.round(stats?.averageUptime || 0)}
+              suffix="%"
+              color="xandeum-green"
+              delay={0.3}
+            />
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

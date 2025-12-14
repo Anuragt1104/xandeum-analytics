@@ -239,23 +239,6 @@ export function HeroSection({ stats, isLoading }: HeroSectionProps) {
             Live Network Monitoring
           </motion.div>
           
-          {/* Xandeum Logo */}
-          <motion.div 
-            variants={fadeInUp}
-            className="flex items-center gap-4 mb-4"
-          >
-            <Image
-              src="/xandeum-logo.png"
-              alt="Xandeum"
-              width={180}
-              height={40}
-              className="h-10 w-auto"
-              priority
-            />
-            <div className="h-8 w-px bg-border" />
-            <span className="text-sm font-medium text-muted-foreground">pNode Analytics</span>
-          </motion.div>
-          
           <AnimatedTitle text="Network Dashboard" />
           
           <motion.p

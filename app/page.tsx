@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { LayoutGrid, List, Globe2, Network, Sparkles } from 'lucide-react';
+import { LayoutGrid, List, Globe2, Network, Sparkles, Map as MapIcon } from 'lucide-react';
 import { HeroSection } from '@/components/dashboard/hero-section';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { SearchFilter } from '@/components/dashboard/search-filter';
@@ -26,9 +26,27 @@ const WorldMap = dynamic(
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-xandeum-green/20 border-t-xandeum-green animate-spin" />
-            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-xandeum-green" />
+            <MapIcon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-xandeum-green" />
           </div>
-          <span className="text-sm text-muted-foreground">Loading World Map...</span>
+          <span className="text-sm text-muted-foreground">Loading Map...</span>
+        </div>
+      </div>
+    )
+  }
+);
+
+const Globe3D = dynamic(
+  () => import('@/components/dashboard/globe-3d').then((mod) => mod.Globe3D),
+  { 
+    ssr: false, 
+    loading: () => (
+      <div className="h-[600px] bg-card/30 backdrop-blur rounded-xl border border-border/50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <Globe2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground">Initializing 3D Globe...</span>
         </div>
       </div>
     )
@@ -66,7 +84,7 @@ export default function HomePage() {
 
   // View mode: 'table' for desktop, 'cards' for mobile/user preference
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [activeTab, setActiveTab] = useState<'list' | 'map' | 'topology'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'map' | 'globe' | 'topology'>('list');
 
   // Extract unique versions for filter
   const versions = useMemo(() => {
@@ -94,7 +112,7 @@ export default function HomePage() {
         <StatsCards stats={stats} isLoading={isLoading} />
       </motion.div>
 
-      {/* Main Content Tabs - Only 3 tabs: List, Map, Topology */}
+      {/* Main Content Tabs */}
       <motion.div variants={fadeInUp}>
         <Tabs 
           value={activeTab} 
@@ -114,8 +132,15 @@ export default function HomePage() {
                 value="map" 
                 className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-xandeum-orange data-[state=active]:to-xandeum-orange/80 data-[state=active]:text-white transition-all"
               >
+                <MapIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">2D Map</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="globe" 
+                className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all"
+              >
                 <Globe2 className="h-4 w-4" />
-                <span className="hidden sm:inline">World Map</span>
+                <span className="hidden sm:inline">3D Globe</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="topology" 
@@ -189,9 +214,18 @@ export default function HomePage() {
             </div>
           </TabsContent>
 
-          {/* Tab Content: World Map (2D with clustering) */}
+          {/* Tab Content: World Map (2D) */}
           <TabsContent value="map" className="mt-0">
             <WorldMap
+              nodes={nodes}
+              isLoading={isLoading}
+              onNodeClick={handleNodeClick}
+            />
+          </TabsContent>
+
+          {/* Tab Content: 3D Globe */}
+          <TabsContent value="globe" className="mt-0">
+            <Globe3D
               nodes={nodes}
               isLoading={isLoading}
               onNodeClick={handleNodeClick}

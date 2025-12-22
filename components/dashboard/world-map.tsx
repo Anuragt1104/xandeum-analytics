@@ -202,7 +202,7 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
     if (!mapRef.current || leafletMapRef.current) return;
 
     // Create map with dark theme
-    leafletMapRef.current = L.map(mapRef.current, {
+    const map = L.map(mapRef.current, {
       center: [20, 0],
       zoom: 2,
       minZoom: 2,
@@ -210,6 +210,8 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
       zoomControl: false,
       attributionControl: false,
     });
+
+    leafletMapRef.current = map;
 
     // Initialize marker cluster group with custom styling
     markersRef.current = L.markerClusterGroup({
@@ -276,27 +278,43 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
 
     let url = '';
     let attribution = '';
+    let subdomains = 'abc';
 
     switch (mapStyle) {
       case 'satellite':
+        // Use ESRI World Imagery with fallback
         url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-        attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+        attribution = 'Tiles &copy; Esri';
+        subdomains = '';
         break;
       case 'topo':
-        url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-        attribution = 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
+        // OpenStreetMap as more reliable alternative
+        url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
         break;
       case 'dark':
       default:
         url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
         break;
     }
 
-    tileLayerRef.current = L.tileLayer(url, {
+    const options: L.TileLayerOptions = {
       maxZoom: 19,
-      attribution
-    }).addTo(leafletMapRef.current);
+      attribution,
+      crossOrigin: true,
+    };
+
+    if (subdomains) {
+      options.subdomains = subdomains;
+    }
+
+    tileLayerRef.current = L.tileLayer(url, options).addTo(leafletMapRef.current);
+
+    // Force map to recalculate and reload tiles
+    setTimeout(() => {
+      leafletMapRef.current?.invalidateSize();
+    }, 100);
 
     // Bring markers to front
     if (markersRef.current) {
@@ -363,12 +381,17 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
     });
   }, [nodes, onNodeClick, mapStyle]);
 
-  // Handle fullscreen
+  // Handle fullscreen - ensure map recalculates dimensions
   useEffect(() => {
     if (leafletMapRef.current) {
-      setTimeout(() => {
-        leafletMapRef.current?.invalidateSize();
-      }, 100);
+      // Multiple invalidateSize calls to ensure proper rendering
+      const timeouts = [50, 150, 300].map(delay =>
+        setTimeout(() => {
+          leafletMapRef.current?.invalidateSize();
+        }, delay)
+      );
+
+      return () => timeouts.forEach(t => clearTimeout(t));
     }
   }, [isFullscreen]);
 
@@ -512,18 +535,13 @@ export function WorldMap({ nodes, isLoading, onNodeClick }: WorldMapProps) {
     </>
   );
 
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-background">
-        <Card className="h-full rounded-none border-0">
-          {cardContent}
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <Card ref={containerRef} className="bg-card/50 backdrop-blur border-border/50 overflow-hidden">
+    <Card
+      ref={containerRef}
+      className={`bg-card/50 backdrop-blur border-border/50 overflow-hidden transition-all duration-200 ${
+        isFullscreen ? 'fixed inset-0 z-[9999] rounded-none border-0 bg-background' : ''
+      }`}
+    >
       {cardContent}
     </Card>
   );

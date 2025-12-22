@@ -6,17 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Globe2, 
-  ZoomIn, 
-  ZoomOut, 
-  RotateCcw, 
-  Play, 
+import {
+  Globe2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Play,
   Pause,
   MapPin,
   Activity,
   X,
-  ExternalLink
+  ExternalLink,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import type { PNode } from '@/lib/types';
 import { truncatePubkey, formatBytes } from '@/lib/prpc-client';
@@ -179,6 +181,7 @@ export function Globe3D({ nodes, isLoading, onNodeClick }: Globe3DProps) {
   const [isAutoRotating, setIsAutoRotating] = useState(true);
   const [hoveredNode, setHoveredNode] = useState<PNode | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Load globe.gl dynamically
   useEffect(() => {
@@ -187,18 +190,26 @@ export function Globe3D({ nodes, isLoading, onNodeClick }: Globe3DProps) {
     });
   }, []);
 
-  // Update dimensions
+  // Update dimensions using ResizeObserver
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
-        setDimensions({ width, height: Math.max(500, height) });
+        setDimensions({
+          width,
+          height: isFullscreen ? window.innerHeight - 60 : Math.max(500, height)
+        });
       }
     };
+
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [isFullscreen]);
 
   // Filter nodes with valid coordinates
   const nodesWithCoords = useMemo(() => {
@@ -312,6 +323,11 @@ export function Globe3D({ nodes, isLoading, onNodeClick }: Globe3DProps) {
     }
   }, [isAutoRotating]);
 
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
+
   if (isLoading || !Globe) {
     return (
       <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden">
@@ -337,7 +353,9 @@ export function Globe3D({ nodes, isLoading, onNodeClick }: Globe3DProps) {
   }
 
   return (
-    <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden">
+    <Card className={`bg-card/50 backdrop-blur border-border/50 overflow-hidden transition-all duration-200 ${
+      isFullscreen ? 'fixed inset-0 z-[9999] rounded-none border-0 bg-background' : ''
+    }`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -367,15 +385,24 @@ export function Globe3D({ nodes, isLoading, onNodeClick }: Globe3DProps) {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
               <RotateCcw className="h-4 w-4" />
             </Button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleFullscreen}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div ref={containerRef} className="relative h-[600px] overflow-hidden rounded-b-lg">
+        <div ref={containerRef} className={`relative overflow-hidden rounded-b-lg ${isFullscreen ? 'h-[calc(100vh-60px)]' : 'h-[600px]'}`}>
           <Globe
             ref={globeRef}
             width={dimensions.width}
-            height={600}
+            height={dimensions.height}
             globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
             bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
             backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"

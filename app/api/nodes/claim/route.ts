@@ -3,11 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-// POST - Claim a node
+// POST - Claim a node (uses wallet signature verification, not session auth)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
     const body = await request.json();
     const { nodeId, walletAddress, signature, message } = body;
 
@@ -75,8 +73,18 @@ export async function POST(request: NextRequest) {
 // PATCH - Update node customization
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
+    // Handle session fetch with dedicated error handling
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+    } catch (authError) {
+      console.error('Auth service error:', authError);
+      return NextResponse.json(
+        { error: 'Authentication service unavailable' },
+        { status: 503 }
+      );
+    }
+
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

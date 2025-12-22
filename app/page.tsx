@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { LayoutGrid, List, Globe2, Network, Sparkles, Map as MapIcon } from 'lucide-react';
@@ -69,7 +68,6 @@ const TopologyGraph = dynamic(
 );
 
 export default function HomePage() {
-  const router = useRouter();
   const {
     nodes,
     filteredNodes,
@@ -92,9 +90,11 @@ export default function HomePage() {
     return Array.from(versionSet).sort().reverse();
   }, [nodes]);
 
-  // Handle node click from map or graph
+  // Handle node click from map or graph - selection is handled internally
+  // Navigation to node details happens via "View Full Analytics" button in info panel
   const handleNodeClick = (node: PNode) => {
-    router.push(`/node/${node.pubkey}`);
+    // Node selection is handled by the map/globe components internally
+    // This callback is kept for potential analytics or other purposes
   };
 
   return (

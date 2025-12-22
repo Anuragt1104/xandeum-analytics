@@ -128,12 +128,12 @@ interface StatCardProps {
   index?: number;
 }
 
-function StatCard({ 
-  title, 
-  value, 
+function StatCard({
+  title,
+  value,
   rawValue,
-  subtitle, 
-  icon, 
+  subtitle,
+  icon,
   trend,
   trendValue,
   isLoading,
@@ -142,16 +142,18 @@ function StatCard({
   index = 0,
 }: StatCardProps) {
   const animatedValue = useAnimatedCounter(
-    rawValue || 0, 
-    1500, 
+    rawValue || 0,
+    1500,
     typeof rawValue === 'number' && rawValue < 100 ? 1 : 0,
     !isLoading && rawValue !== undefined
   );
 
-  // Generate fake sparkline data if not provided
-  const chartData = sparklineData || Array.from({ length: 12 }, () => 
-    Math.random() * 30 + 70
-  );
+  // Generate deterministic sparkline data if not provided (based on index for consistency)
+  const chartData = sparklineData || Array.from({ length: 12 }, (_, i) => {
+    // Use a seeded pseudo-random based on index to avoid hydration mismatch
+    const seed = (index * 12 + i + 1) * 9301 + 49297;
+    return ((seed % 233280) / 233280) * 30 + 70;
+  });
 
   return (
     <motion.div

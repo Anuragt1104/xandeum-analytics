@@ -48,24 +48,57 @@ export function ClaimNodeModal({ isOpen, onClose, node, onClaimed }: ClaimNodeMo
     setIsLoading(true);
 
     try {
-      const { solana } = window as unknown as { 
-        solana?: { 
-          isPhantom?: boolean; 
-          connect: () => Promise<{ publicKey: { toString: () => string } }>;
-        } 
+      // Check if we're in browser
+      if (typeof window === 'undefined') {
+        setError('Wallet connection requires a browser');
+        return;
+      }
+
+      const { solana } = window as unknown as {
+        solana?: {
+          isPhantom?: boolean;
+          isConnected?: boolean;
+          connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
+          publicKey?: { toString: () => string };
+        }
       };
-      
-      if (!solana?.isPhantom) {
+
+      if (!solana) {
+        setError('No Solana wallet found. Please install Phantom wallet.');
+        return;
+      }
+
+      if (!solana.isPhantom) {
         setError('Please install Phantom wallet to continue');
         return;
       }
 
+      // Check if already connected
+      if (solana.isConnected && solana.publicKey) {
+        setWalletAddress(solana.publicKey.toString());
+        setStep('verify');
+        return;
+      }
+
       const response = await solana.connect();
-      setWalletAddress(response.publicKey.toString());
-      setStep('verify');
-    } catch (err) {
+      if (response?.publicKey) {
+        setWalletAddress(response.publicKey.toString());
+        setStep('verify');
+      } else {
+        setError('Failed to get wallet address');
+      }
+    } catch (err: unknown) {
       console.error('Wallet connection error:', err);
-      setError('Failed to connect wallet');
+      const error = err as { code?: number; message?: string };
+
+      // Handle specific Phantom errors
+      if (error.code === 4001) {
+        setError('Connection request was rejected');
+      } else if (error.message?.includes('User rejected')) {
+        setError('Connection request was rejected');
+      } else {
+        setError('Failed to connect wallet. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

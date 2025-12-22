@@ -54,7 +54,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <XandeumLogo size="md" animated={true} />
+            <XandeumLogo size="md" animated={true} showText={true} />
           </Link>
 
           {/* Desktop Navigation */}

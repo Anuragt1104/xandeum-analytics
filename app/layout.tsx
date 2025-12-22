@@ -53,7 +53,10 @@ export const metadata: Metadata = {
       'Real-time analytics dashboard for Xandeum pNodes - the decentralized storage layer for Solana.',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/xandeum-x.png', type: 'image/png' },
+    ],
+    apple: '/xandeum-x.png',
   },
 };
 
